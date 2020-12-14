@@ -13,7 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2015 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
+ /* MODIFIED-END by zhangjie,BUG-10277814*/
 /*
  *  Tag-reading, tag-writing operations.
  */
@@ -22,11 +42,18 @@
 #include <vector>
 #include "NfcJniUtil.h"
 #include "SyncEvent.h"
-
 #include "nfa_rw_api.h"
 
 #define MIN_FWI (11)
 #define MAX_FWI (14)
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+#define MIN_TRANSCEIVE_TIMEOUT_IN_MILLISEC (500.0)
+
+typedef struct activationParams {
+  int mTechParams;
+  int mTechLibNfcTypes;
+} activationParams_t;
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 class NfcTag {
  public:
@@ -43,16 +70,26 @@ class NfcTag {
                                              // service received from
                                              // RF_INTF_ACTIVATED NTF
   int mNumTechList;  // current number of NFC technologies in the list
-
+  /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+  int mTechListIndex;
+  bool mNfcDisableinProgress;
+  bool mCashbeeDetected;
+  bool mEzLinkTypeTag;
+  activationParams_t mActivationParams_t;
+  bool mIsMultiProtocolTag;
+#if (NXP_EXTNS == TRUE)
+  bool mWaitingForSelect;
+#endif
   /*******************************************************************************
-  **
-  ** Function:        NfcTag
-  **
-  ** Description:     Initialize member variables.
-  **
-  ** Returns:         None
-  **
-  *******************************************************************************/
+   **
+   ** Function:        NfcTag
+   **
+   ** Description:     Initialize member variables.
+   **
+   ** Returns:         None
+   **
+   *******************************************************************************/
+   /* MODIFIED-END by zhangjie,BUG-10277814*/
   NfcTag();
 
   /*******************************************************************************
@@ -229,9 +266,11 @@ class NfcTag {
   **
   ** Function:        isMifareDESFire
   **
-  ** Description:     Whether the currently activated tag is Mifare DESFire.
+  // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+  ** Description:     Whether the currently activated tag is Mifare Ultralight.
   **
-  ** Returns:         True if tag is Mifare DESFire.
+  ** Returns:         True if tag is Mifare Ultralight.
+  // MODIFIED-END by zhangjie, BUG-10277814
   **
   *******************************************************************************/
   bool isMifareDESFire();
@@ -327,7 +366,7 @@ class NfcTag {
   **
   ** Description:     Get the timeout value for one technology.
   **                  techId: one of the values in TARGET_TYPE_* defined in
-  **                  NfcJniUtil.h
+  *                   NfcJniUtil.h // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
   **
   ** Returns:         Timeout value in millisecond.
   **
@@ -416,6 +455,85 @@ class NfcTag {
   *******************************************************************************/
   int getNumDiscNtf();
 
+  /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+  /*******************************************************************************
+  **
+  ** Function:        isTypeBTag
+  **
+  ** Description:     Whether the currently activated tag is Type B.
+  **
+  ** Returns:         True if tag is Type B.
+  **
+  *******************************************************************************/
+  bool isTypeBTag();
+
+  /*******************************************************************************
+  **
+  ** Function:        getTypeATagUID
+  **
+  ** Description:     Get the UID of TypeA Tag.
+  **
+  ** Returns:         UID in case of TypeA Tag otherwise NULL..
+  **
+  *******************************************************************************/
+  void getTypeATagUID(uint8_t** uid, uint32_t* len);
+
+  /*******************************************************************************
+  **
+  ** Function:        checkNextValidProtocol
+  **
+  ** Description:     When multiple tags are discovered, check next valid
+  *protocol
+  **
+  ** Returns:         id
+  **
+  *******************************************************************************/
+  int checkNextValidProtocol(void);
+
+  /*******************************************************************************
+  **
+  ** Function:        isEzLinkTagActivated
+  **
+  ** Description:     checks if EzLinkTag tag is detected
+  **
+  ** Returns:         True if tag is activated.
+  **
+  *******************************************************************************/
+  bool isEzLinkTagActivated();
+
+  /*******************************************************************************
+  **
+  ** Function:        isCashBeeActivated
+  **
+  ** Description:     checks if cashbee tag is detected
+  **
+  ** Returns:         True if tag is activated.
+  **
+  *******************************************************************************/
+  bool isCashBeeActivated();
+  /*******************************************************************************
+  **
+  ** Function:        storeActivationParams
+  **
+  ** Description:     stores tag activation parameters for backup
+  **
+  ** Returns:         None
+  **
+  *******************************************************************************/
+  void storeActivationParams();
+#if (NXP_EXTNS == TRUE)
+  /*******************************************************************************
+  **
+  ** Function:        selectCompleteStatus
+  **
+  ** Description:     Notify whether tag select is success/failure
+  **
+  ** Returns:         None
+  **
+  *******************************************************************************/
+  void selectCompleteStatus(bool status);
+#endif
+/* MODIFIED-END by zhangjie,BUG-10277814*/
  private:
   std::vector<int> mTechnologyTimeoutsTable;
   std::vector<int> mTechnologyDefaultTimeoutsTable;
@@ -433,7 +551,6 @@ class NfcTag {
   struct timespec mLastKovioTime;  // time of last Kovio tag activation
   uint8_t mLastKovioUid[NFC_KOVIO_MAX_LEN];  // uid of last Kovio tag activated
   bool mIsDynamicTagId;  // whether the tag has dynamic tag ID
-  tNFA_RW_PRES_CHK_OPTION mPresenceCheckAlgorithm;
   bool mIsFelicaLite;
   int mTechHandlesDiscData[MAX_NUM_TECHNOLOGY];      // array of tag handles (RF
                                                      // DISC ID) received from
@@ -445,7 +562,7 @@ class NfcTag {
   int mNumDiscNtf;
   int mNumDiscTechList;
   int mTechListTail;  // Index of Last added entry in mTechList
-  bool mIsMultiProtocolTag;
+  tNFA_RW_PRES_CHK_OPTION mPresenceCheckAlgorithm; // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 
   /*******************************************************************************
   **

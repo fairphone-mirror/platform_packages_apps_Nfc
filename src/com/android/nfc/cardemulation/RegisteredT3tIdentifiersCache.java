@@ -13,6 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+ /******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2019-2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 package com.android.nfc.cardemulation;
 
@@ -21,7 +42,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.nfc.cardemulation.NfcFServiceInfo;
 import android.util.Log;
-import android.util.proto.ProtoOutputStream;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -30,11 +50,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import android.os.SystemProperties;
 
 public class RegisteredT3tIdentifiersCache {
     static final String TAG = "RegisteredT3tIdentifiersCache";
 
-    static final boolean DBG = false;
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     // All NFC-F services that have registered
     List<NfcFServiceInfo> mServices = new ArrayList<NfcFServiceInfo>();
@@ -221,26 +244,5 @@ public class RegisteredT3tIdentifiersCache {
         pw.println("");
         mRoutingManager.dump(fd, pw, args);
         pw.println("");
-    }
-
-    /**
-     * Dump debugging information as a RegisteredT3tIdentifiersCacheProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    void dumpDebug(ProtoOutputStream proto) {
-        for (NfcFServiceInfo serviceInfo : mForegroundT3tIdentifiersCache.values()) {
-            long token = proto.start(
-                    RegisteredT3tIdentifiersCacheProto.T3T_IDENTIFIER_CACHE_ENTRIES);
-            serviceInfo.dumpDebug(proto);
-            proto.end(token);
-        }
-        long token = proto.start(RegisteredT3tIdentifiersCacheProto.ROUTING_MANAGER);
-        mRoutingManager.dumpDebug(proto);
-        proto.end(token);
     }
 }

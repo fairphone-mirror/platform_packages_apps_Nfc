@@ -17,10 +17,9 @@
 #include <android-base/stringprintf.h>
 #include <base/logging.h>
 #include <log/log.h>
-#include <nativehelper/JNIHelp.h>
-
 #include "JavaClassConstants.h"
 #include "NfcJniUtil.h"
+#include <nativehelper/JNIHelp.h> // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 
 using android::base::StringPrintf;
 

@@ -13,12 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2018-2020 NXP
+*
+******************************************************************************/
 package com.android.nfc.cardemulation;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.List;
-
+import java.util.ArrayList;
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,7 +48,11 @@ import android.nfc.INfcCardEmulation;
 import android.nfc.INfcFCardEmulation;
 import android.nfc.NfcAdapter;
 import android.nfc.cardemulation.AidGroup;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import android.nfc.cardemulation.NfcAidGroup;
 import android.nfc.cardemulation.ApduServiceInfo;
+import android.nfc.cardemulation.NfcApduServiceInfo;
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 import android.nfc.cardemulation.NfcFServiceInfo;
 import android.nfc.cardemulation.CardEmulation;
 import android.nfc.cardemulation.NfcFCardEmulation;
@@ -38,12 +63,17 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
-import android.util.proto.ProtoOutputStream;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import java.util.Map;
+import java.util.HashMap;
 
 import com.android.nfc.NfcPermissions;
 import com.android.nfc.NfcService;
 import com.android.nfc.cardemulation.RegisteredServicesCache;
 import com.android.nfc.cardemulation.RegisteredNfcFServicesCache;
+import com.nxp.nfc.NfcAidServiceInfo;
+import android.os.SystemProperties;
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 /**
  * CardEmulationManager is the central entity
@@ -64,8 +94,7 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
         RegisteredNfcFServicesCache.Callback, PreferredServices.Callback,
         EnabledNfcFServices.Callback {
     static final String TAG = "CardEmulationManager";
-    static final boolean DBG = false;
-
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false); // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
     static final int NFC_HCE_APDU = 0x01;
     static final int NFC_HCE_NFCF = 0x04;
 
@@ -107,7 +136,12 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
     public INfcFCardEmulation getNfcFCardEmulationInterface() {
         return mNfcFCardEmulationInterface;
     }
-
+        /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+        // To get Object of RegisteredAidCache to get the Default Offhost service.
+    public RegisteredAidCache getRegisteredAidCache() {
+        return mAidCache;
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     public void onHostCardEmulationActivated(int technology) {
         if (mPowerManager != null) {
@@ -194,51 +228,8 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
         mHostNfcFEmulationManager.dump(fd, pw, args);
     }
 
-    /**
-     * Dump debugging information as a CardEmulationManagerProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    public void dumpDebug(ProtoOutputStream proto) {
-        long token = proto.start(CardEmulationManagerProto.REGISTERED_SERVICES_CACHE);
-        mServiceCache.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.REGISTERED_NFC_F_SERVICES_CACHE);
-        mNfcFServicesCache.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.PREFERRED_SERVICES);
-        mPreferredServices.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.ENABLED_NFC_F_SERVICES);
-        mEnabledNfcFServices.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.AID_CACHE);
-        mAidCache.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.T3T_IDENTIFIERS_CACHE);
-        mT3tIdentifiersCache.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.HOST_EMULATION_MANAGER);
-        mHostEmulationManager.dumpDebug(proto);
-        proto.end(token);
-
-        token = proto.start(CardEmulationManagerProto.HOST_NFC_F_EMULATION_MANAGER);
-        mHostNfcFEmulationManager.dumpDebug(proto);
-        proto.end(token);
-    }
-
     @Override
-    public void onServicesUpdated(int userId, List<ApduServiceInfo> services) {
+    public void onServicesUpdated(int userId, List<NfcApduServiceInfo> services) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
         // Verify defaults are still sane
         verifyDefaults(userId, services);
         // Update the AID cache
@@ -257,7 +248,7 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
         mEnabledNfcFServices.onServicesUpdated();
     }
 
-    void verifyDefaults(int userId, List<ApduServiceInfo> services) {
+    void verifyDefaults(int userId, List<NfcApduServiceInfo> services) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
         ComponentName defaultPaymentService =
                 getDefaultServiceForCategory(userId, CardEmulation.CATEGORY_PAYMENT, true);
         if (DBG) Log.d(TAG, "Current default: " + defaultPaymentService);
@@ -266,7 +257,7 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
             // in that case, automatically set that app as default.
             int numPaymentServices = 0;
             ComponentName lastFoundPaymentService = null;
-            for (ApduServiceInfo service : services) {
+            for (NfcApduServiceInfo service : services) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                 if (service.hasCategory(CardEmulation.CATEGORY_PAYMENT))  {
                     numPaymentServices++;
                     lastFoundPaymentService = service.getComponent();
@@ -425,7 +416,7 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
                 return false;
             }
             if (!mServiceCache.registerAidGroupForService(userId, Binder.getCallingUid(), service,
-                    aidGroup)) {
+                    new NfcAidGroup(aidGroup))) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                 return false;
             }
             NfcService.getInstance().onPreferredPaymentChanged(
@@ -498,7 +489,16 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
                 throws RemoteException {
             NfcPermissions.validateUserId(userId);
             NfcPermissions.enforceAdminPermissions(mContext);
-            return mServiceCache.getServicesForCategory(userId, category);
+            /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+            List<NfcApduServiceInfo> nfcApduServices = mServiceCache.getServicesForCategory(userId, category);
+            ArrayList<ApduServiceInfo> apduServices = new ArrayList<ApduServiceInfo>();
+            for(NfcApduServiceInfo nfcApdu : nfcApduServices) {
+                ApduServiceInfo apduService = nfcApdu.createApduServiceInfo();
+                apduServices.add(apduService);
+            }
+            if(DBG) Log.d(TAG, "getServices() size: " + apduServices.size());
+            return apduServices;
+            /* MODIFIED-END by zhangjie,BUG-10277814*/
         }
 
         @Override
@@ -530,7 +530,13 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
             NfcPermissions.validateUserId(userId);
             NfcPermissions.enforceUserPermissions(mContext);
             NfcPermissions.enforcePreferredPaymentInfoPermissions(mContext);
-            return mServiceCache.getService(userId, mAidCache.getPreferredService());
+            /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+            if((mServiceCache.getService(userId, mAidCache.getPreferredService())) != null) {
+                return ((mServiceCache.getService(userId, mAidCache.getPreferredService())).createApduServiceInfo());
+            } else {
+                return null;
+            }
+            /* MODIFIED-END by zhangjie,BUG-10277814*/
         }
     }
 
@@ -652,9 +658,59 @@ public class CardEmulationManager implements RegisteredServicesCache.Callback,
                 NfcAdapter.PREFERRED_PAYMENT_CHANGED);
     }
 
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public void onRoutingTableChanged() {
+        mAidCache.onRoutingTableChanged();
+    }
+
+    public List<NfcAidServiceInfo> getServicesAidInfo(int userId, String category) {
+        if(category == CardEmulation.CATEGORY_PAYMENT) {
+            return null;
+        }
+        List<NfcApduServiceInfo> nonPaymentServices = new ArrayList<NfcApduServiceInfo>();
+        List<NfcAidServiceInfo> nfcAidServiceInfoList = new ArrayList<NfcAidServiceInfo>();
+        Integer serviceAidCacheSize = 0x00;
+        String serviceComponent = null;
+        NfcPermissions.validateUserId(userId);
+        NfcPermissions.enforceUserPermissions(mContext);
+        nonPaymentServices = mServiceCache.getServicesForCategory(userId, CardEmulation.CATEGORY_OTHER);
+        for(NfcApduServiceInfo serviceinfo : nonPaymentServices) {
+            serviceAidCacheSize = 0x00;
+            serviceComponent = null;
+            if(serviceinfo != null) {
+                for(String aid : serviceinfo.getAids()) {
+                    if(aid.endsWith("*")) {
+                        serviceAidCacheSize += (aid.length() - 0x01)/2 + 4;
+                    } else {
+                        serviceAidCacheSize += aid.length()/2 + 4;
+                    }
+                }
+                serviceComponent = serviceinfo.getComponent().flattenToString();
+                NfcAidServiceInfo aidServiceInfo = new NfcAidServiceInfo(serviceComponent, serviceAidCacheSize,
+                    serviceinfo.isServiceEnabled(CardEmulation.CATEGORY_OTHER),
+                    serviceinfo.getDescription(),serviceinfo.getOtherAidGroupDescription());
+                nfcAidServiceInfoList.add(aidServiceInfo);
+            }
+        }
+
+
+        return nfcAidServiceInfoList;
+    }
+
+    public int updateServiceState(int userId , Map<String , Boolean> serviceState) {
+        NfcPermissions.validateUserId(userId);
+        NfcPermissions.enforceUserPermissions(mContext);
+        return mServiceCache.updateServiceState(userId ,Binder.getCallingUid() ,serviceState);
+    }
+
     @Override
     public void onEnabledForegroundNfcFServiceChanged(ComponentName service) {
         mT3tIdentifiersCache.onEnabledForegroundNfcFServiceChanged(service);
         mHostNfcFEmulationManager.onEnabledForegroundNfcFServiceChanged(service);
     }
+     public List<NfcApduServiceInfo> getAllServices() {
+        int userId = ActivityManager.getCurrentUser();
+        return mServiceCache.getServices(userId);
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 }

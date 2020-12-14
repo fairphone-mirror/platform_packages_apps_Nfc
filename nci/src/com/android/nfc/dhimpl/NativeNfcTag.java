@@ -191,7 +191,7 @@ public class NativeNfcTag implements TagEndpoint {
                         // special case for NDEF, this will cause switch to ISO_DEP frame intf
                         i = 0;
                        // status = 0;
-                    } 
+                    }
                     status = reconnectWithStatus(i);
                         /*
                         if ((technology != TagTechnology.ISO_DEP) &&
@@ -211,8 +211,8 @@ public class NativeNfcTag implements TagEndpoint {
                             status = 0;
                         }
                         */
-                    
-                    
+
+
                     if (status == 0) {
                         mConnectedTechIndex = i;
                         // Handle was already identical
@@ -730,6 +730,19 @@ public class NativeNfcTag implements TagEndpoint {
                         extras.putBoolean(MifareUltralight.EXTRA_IS_UL_C, isUlc);
                         break;
                     }
+
+                    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+                    case TagTechnology.MIFARE_CLASSIC: {
+                        byte[] actBytes = mTechActBytes[i];
+                        if ((actBytes != null) && (actBytes.length > 0)) {
+                            extras.putShort(NfcA.EXTRA_SAK, (short) (actBytes[0] & (short) 0xFF));
+                        } else {
+                            // ignore this case.
+                        }
+                        extras.putByteArray(NfcA.EXTRA_ATQA, mTechPollBytes[i]);
+                        break;
+                    }
+                    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
                     case TagTechnology.NFC_BARCODE: {
                         // hard code this for now, this is the only valid type

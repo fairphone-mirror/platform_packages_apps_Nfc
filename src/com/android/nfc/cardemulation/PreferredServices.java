@@ -13,6 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 package com.android.nfc.cardemulation;
 
 import java.io.FileDescriptor;
@@ -31,11 +52,11 @@ import android.nfc.cardemulation.ApduServiceInfo;
 import android.nfc.cardemulation.CardEmulation;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemProperties; // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.util.Log;
-import android.util.proto.ProtoOutputStream;
 
 /**
  * This class keeps track of what HCE/SE-based services are
@@ -55,7 +76,7 @@ import android.util.proto.ProtoOutputStream;
  */
 public class PreferredServices implements com.android.nfc.ForegroundUtils.Callback {
     static final String TAG = "PreferredCardEmulationServices";
-    static final boolean DBG = false;
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false); // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
     static final Uri paymentDefaultUri = Settings.Secure.getUriFor(
             Settings.Secure.NFC_PAYMENT_DEFAULT_COMPONENT);
     static final Uri paymentForegroundUri = Settings.Secure.getUriFor(
@@ -385,36 +406,5 @@ public class PreferredServices implements com.android.nfc.ForegroundUtils.Callba
         pw.println("        Default in payment settings: " + mPaymentDefaults.settingsDefault);
         pw.println("        Payment settings allows override: " + mPaymentDefaults.preferForeground);
         pw.println("");
-    }
-
-    /**
-     * Dump debugging information as a PreferredServicesProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    void dumpDebug(ProtoOutputStream proto) {
-        if (mForegroundCurrent != null) {
-            mForegroundCurrent.dumpDebug(proto, PreferredServicesProto.FOREGROUND_CURRENT);
-        }
-        if (mPaymentDefaults.currentPreferred != null) {
-            mPaymentDefaults.currentPreferred.dumpDebug(proto,
-                    PreferredServicesProto.FOREGROUND_CURRENT);
-        }
-        if (mNextTapDefault != null) {
-            mNextTapDefault.dumpDebug(proto, PreferredServicesProto.NEXT_TAP_DEFAULT);
-        }
-        proto.write(PreferredServicesProto.FOREGROUND_UID, mForegroundUid);
-        if (mForegroundRequested != null) {
-            mForegroundRequested.dumpDebug(proto, PreferredServicesProto.FOREGROUND_REQUESTED);
-        }
-        if (mPaymentDefaults.settingsDefault != null) {
-            mPaymentDefaults.settingsDefault.dumpDebug(proto,
-                    PreferredServicesProto.SETTINGS_DEFAULT);
-        }
-        proto.write(PreferredServicesProto.PREFER_FOREGROUND, mPaymentDefaults.preferForeground);
     }
 }

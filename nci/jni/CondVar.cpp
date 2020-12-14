@@ -19,16 +19,14 @@
  */
 
 #include "CondVar.h"
-#include "NfcJniUtil.h"
-
-#include <errno.h>
-#include <string.h>
-
 #include <android-base/stringprintf.h>
 #include <base/logging.h>
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+#include <errno.h>
+#include "NfcJniUtil.h"
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 using android::base::StringPrintf;
-
 /*******************************************************************************
 **
 ** Function:        CondVar
@@ -47,6 +45,11 @@ CondVar::CondVar() {
   if (res) {
     LOG(ERROR) << StringPrintf("CondVar::CondVar: fail init; error=0x%X", res);
   }
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+#if (NXP_EXTNS == TRUE)
+  pthread_condattr_destroy(&attr);
+#endif
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 }
 
 /*******************************************************************************

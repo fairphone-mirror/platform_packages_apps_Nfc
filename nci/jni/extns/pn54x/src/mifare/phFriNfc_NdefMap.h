@@ -31,8 +31,12 @@
 /*  NDEF Mapping Component
  *
  *  This component implements the read/write/check NDEF functions for remote
- * devices. NDEF data, as defined by the NFC Forum NDEF specification are
- * written to or read from a remote device that can be a smart- or memory card.
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ *devices.
+ *  NDEF data, as defined by the NFC Forum NDEF specification are written to or
+ *read from
+ *  a remote device that can be a smart- or memory card.
+ // MODIFIED-END by zhangjie, BUG-10277814
  *  Please notice that the NDEF mapping command sequence must
  *  be contiguous (after correct initialization)
  *
@@ -61,7 +65,7 @@ typedef enum {
 
 /*
  * NDEF Mapping - specifies the Compliant Blocks in the Mifare 1k and 4k card
- * types
+ *types // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
  *
  */
 #define PH_FRINFC_NDEFMAP_MIFARESTD_1KNDEF_COMPBLOCK \
@@ -81,7 +85,10 @@ typedef enum {
  * Completion Routine Indices
  *
  * These are the indices of the completion routine pointers within the component
- * context. Completion routines belong to upper components.
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ *context.
+ * Completion routines belong to upper components.
+ // MODIFIED-END by zhangjie, BUG-10277814
  *
  */
 #define PH_FRINFC_NDEFMAP_CR_CHK_NDEF 0    /* */
@@ -95,8 +102,11 @@ typedef enum {
  * File Offset Attributes
  *
  * Following values are used to determine the offset value for Read/Write. This
- * specifies whether the Read/Write operation needs to be restarted/continued
- * from the last offset set.
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ *specifies whether
+ * the Read/Write operation needs to be restarted/continued from the last offset
+ *set.
+ // MODIFIED-END by zhangjie, BUG-10277814
  *
  */
 /* Read/Write operation shall start from the last offset set */
@@ -326,7 +336,7 @@ typedef struct phFriNfc_ResMemCntrlTLVCont {
  *  NFC NDEF Mapping Component Context Structure
  *
  *  This structure is used to store the current context information of the
- * instance.
+ *instance. // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
  *
  */
 typedef struct phFriNfc_NdefMap {
@@ -455,7 +465,10 @@ typedef struct phFriNfc_NdefMap {
 #define PH_FRINFC_NDEFMAP_STATE_EOF_CARD 2      /* EOF card reached */
 
 /* Following values specify the previous operation on the card. This value is
-   assigned to the context structure variable: PrevOperation. */
+   // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+   assigned to
+   the context structure variable: PrevOperation. */
+   /* MODIFIED-END by zhangjie,BUG-10277814*/
 
 /* Previous operation is check */
 #define PH_FRINFC_NDEFMAP_CHECK_OPE 1
