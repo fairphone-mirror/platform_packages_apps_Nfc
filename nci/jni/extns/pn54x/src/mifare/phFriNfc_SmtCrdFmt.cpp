@@ -64,11 +64,12 @@ void phFriNfc_SmtCrdFmt_HCrHandler(phFriNfc_sNdefSmtCrdFmt_t* NdefSmtCrdFmt,
 *function is invalid.
 **
 *******************************************************************************/
-NFCSTATUS
-phFriNfc_NdefSmtCrd_Reset(phFriNfc_sNdefSmtCrdFmt_t* NdefSmtCrdFmt,
-                          void* LowerDevice,
-                          phHal_sRemoteDevInformation_t* psRemoteDevInfo,
-                          uint8_t* SendRecvBuffer, uint16_t* SendRecvBuffLen) {
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+NFCSTATUS phFriNfc_NdefSmtCrd_Reset(
+    phFriNfc_sNdefSmtCrdFmt_t* NdefSmtCrdFmt, void* LowerDevice,
+    phHal_sRemoteDevInformation_t* psRemoteDevInfo, uint8_t* SendRecvBuffer,
+    uint16_t* SendRecvBuffLen) {
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
   NFCSTATUS result = NFCSTATUS_SUCCESS;
   uint8_t index;
   if ((SendRecvBuffLen == NULL) || (NdefSmtCrdFmt == NULL) ||
@@ -91,7 +92,7 @@ phFriNfc_NdefSmtCrd_Reset(phFriNfc_sNdefSmtCrdFmt_t* NdefSmtCrdFmt,
     /* Lower Device(Always Overlapped HAL Struct initialized in application
      * is registered in NdefMap Lower Device)
      */
-    NdefSmtCrdFmt->pTransceiveInfo = (phNfc_sTransceiveInfo*)LowerDevice;
+    NdefSmtCrdFmt->pTransceiveInfo = (phNfc_sTransceiveInfo_t *)LowerDevice; // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 
     /* Remote Device info received from Manual Device Discovery is registered
      * here */

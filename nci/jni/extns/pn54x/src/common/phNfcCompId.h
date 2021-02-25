@@ -25,7 +25,10 @@
  *  Component IDs
  *
  *  IDs for all NFC components. Combined with the Status Code they build the
- * value (status) returned by each function.
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ *value (status)
+ *  returned by each function.
+ // MODIFIED-END by zhangjie, BUG-10277814
  *
  *  ID Number Spaces:
  *  - 01..1F: HAL
@@ -34,8 +37,11 @@
  *  .
  *
  *         The value CID_NFC_NONE does not exist for Component IDs. Do not use
- * this value except for NFCSTATUS_SUCCESS. The enumeration function uses
- * CID_NFC_NONE to mark unassigned "References".
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ *this value except
+ *         for NFCSTATUS_SUCCESS. The enumeration function uses CID_NFC_NONE
+ *         to mark unassigned "References".
+ // MODIFIED-END by zhangjie, BUG-10277814
  */
 #define CID_NFC_NONE \
   0x00 /* Unassigned or doesn't apply (see #NFCSTATUS_SUCCESS) */
