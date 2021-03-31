@@ -13,7 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2018-2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 package com.android.nfc;
 
 import android.annotation.Nullable;
@@ -31,7 +51,19 @@ public interface DeviceHost {
         public void onHostCardEmulationActivated(int technology);
         public void onHostCardEmulationData(int technology, byte[] data);
         public void onHostCardEmulationDeactivated(int technology);
+        /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+        /**
+         * Notifies that the SE has been activated in listen mode
+         */
+        public void onSeListenActivated();
 
+        /**
+         * Notifies that the SE has been deactivated
+         */
+        public void onSeListenDeactivated();
+
+        public void onSeInitialized();
+        /* MODIFIED-END by zhangjie,BUG-10277814*/
         /**
          * Notifies P2P Device detected, to activate LLCP link
          */
@@ -47,10 +79,16 @@ public interface DeviceHost {
         public void onRemoteFieldActivated();
 
         public void onRemoteFieldDeactivated();
+        /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+        /**
+         * Notifies SWP Reader Events.
+         */
+        public void onScrNotifyEvents(int event);
 
         public void onNfcTransactionEvent(byte[] aid, byte[] data, String seName);
 
-        public void onEeUpdated();
+        public void onLxDebugConfigData(int len, byte[] data);
+        /* MODIFIED-END by zhangjie,BUG-10277814*/
     }
 
     public interface TagEndpoint {
@@ -186,13 +224,42 @@ public interface DeviceHost {
 
     public void disableDiscovery();
 
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public int[] doGetActiveSecureElementList();
     public boolean sendRawFrame(byte[] data);
 
-    public boolean routeAid(byte[] aid, int route, int aidInfo);
+    public boolean routeAid(byte[] aid, int route, int aidInfo, int powerState);
 
     public boolean unrouteAid(byte[] aid);
 
+    public boolean setRoutingEntry(int type, int value, int route, int power);
+
+    public boolean clearRoutingEntry(int type);
+
+    public int getDefaultAidRoute();
+
+    public int getDefaultDesfireRoute();
+
+    public int getT4TNfceePowerState();
+
+    public int getDefaultMifareCLTRoute();
+
+    public int getDefaultFelicaCLTRoute();
+
+    public int getDefaultAidPowerState();
+
+    public int getDefaultDesfirePowerState();
+
+    public int getDefaultMifareCLTPowerState();
+
+    public int getDefaultFelicaCLTPowerState();
+
+    public int getGsmaPwrState();
+
     public boolean commitRouting();
+
+    public void setEmptyAidRoute(int defaultAidRoute);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     public void registerT3tIdentifier(byte[] t3tIdentifier);
 
@@ -247,6 +314,22 @@ public interface DeviceHost {
 
     public void doSetScreenState(int screen_state_mask);
 
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public void doResonantFrequency(boolean isResonantFreq);
+
+    void stopPoll(int mode);
+
+    void startPoll();
+
+    int mposSetReaderMode(boolean on);
+
+    int configureSecureReaderMode(boolean on, String readerType);
+
+    boolean mposGetReaderMode();
+
+    public int doNfcSelfTest(int type);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
+
     public int getNciVersion();
 
     public void enableDtaMode();
@@ -260,4 +343,28 @@ public interface DeviceHost {
     public boolean setNfcSecure(boolean enable);
 
     public String getNfaStorageDir();
+
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/* NXP extension are here */
+    public void doChangeDiscoveryTech(int pollTech, int listenTech);
+    public boolean accessControlForCOSU (int mode);
+
+    public int getFWVersion();
+    public byte[] readerPassThruMode(byte status, byte modulationTyp);
+    public byte[] transceiveAppData(byte[] data);
+    boolean isNfccBusy();
+    int setTransitConfig(String configs);
+    public int getRemainingAidTableSize();
+    public int doselectUicc(int uiccSlot);
+    public int doGetSelectedUicc();
+    public int setPreferredSimSlot(int uiccSlot);
+    public int doSetFieldDetectMode(boolean mode);
+    public boolean isFieldDetectEnabled();
+    public int doWriteT4tData(byte[] fileId, byte[] data, int length);
+    public byte[] doReadT4tData(byte[] fileId);
+    public boolean doLockT4tData(boolean lock);
+    public boolean isLockedT4tData();
+    public boolean doClearNdefT4tData();
+    public int doEnableDebugNtf(byte fieldValue);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 }
