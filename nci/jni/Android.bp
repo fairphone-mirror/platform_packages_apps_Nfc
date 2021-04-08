@@ -1,5 +1,5 @@
 cc_library_shared {
-    name: "libnfc_nci_jni",
+    name: "aosp_libnfc_nci_jni",
 
     cflags: [
         "-Wall",
