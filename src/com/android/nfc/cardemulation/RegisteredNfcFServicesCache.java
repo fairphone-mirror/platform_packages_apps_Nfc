@@ -13,6 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2019-2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 package com.android.nfc.cardemulation;
 
@@ -38,7 +59,6 @@ import android.util.AtomicFile;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.Xml;
-import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.util.FastXmlSerializer;
 import com.google.android.collect.Maps;
@@ -57,11 +77,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import android.os.SystemProperties;
 
 public class RegisteredNfcFServicesCache {
     static final String XML_INDENT_OUTPUT_FEATURE = "http://xmlpull.org/v1/doc/features.html#indent-output";
     static final String TAG = "RegisteredNfcFServicesCache";
-    static final boolean DBG = false;
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     final Context mContext;
     final AtomicReference<BroadcastReceiver> mReceiver;
@@ -421,24 +444,20 @@ public class RegisteredNfcFServicesCache {
                                     parser.getAttributeValue(null, "component");
                             String uidString =
                                     parser.getAttributeValue(null, "uid");
-                            String systemCodeString =
-                                    parser.getAttributeValue(null, "system-code");
-                            String descriptionString =
-                                    parser.getAttributeValue(null, "description");
-                            String nfcid2String =
-                                    parser.getAttributeValue(null, "nfcid2");
                             if (compString == null || uidString == null) {
                                 Log.e(TAG, "Invalid service attributes");
                             } else {
                                 try {
                                     componentName = ComponentName.unflattenFromString(compString);
                                     currentUid = Integer.parseInt(uidString);
-                                    systemCode = systemCodeString;
-                                    description = descriptionString;
-                                    nfcid2 = nfcid2String;
                                 } catch (NumberFormatException e) {
                                     Log.e(TAG, "Could not parse service uid");
                                 }
+                                /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+                                systemCode = parser.getAttributeValue(null, "system-code");
+                                description = parser.getAttributeValue(null, "description");
+                                nfcid2 = parser.getAttributeValue(null, "nfcid2");
+                                /* MODIFIED-END by zhangjie,BUG-10277814*/
                             }
                         }
                     } else if (eventType == XmlPullParser.END_TAG) {
@@ -724,26 +743,6 @@ public class RegisteredNfcFServicesCache {
                 pw.println("");
             }
             pw.println("");
-        }
-    }
-
-    /**
-     * Dump debugging information as a RegisteredNfcFServicesCacheProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    void dumpDebug(ProtoOutputStream proto) {
-        synchronized (mLock) {
-            UserServices userServices = findOrCreateUserLocked(ActivityManager.getCurrentUser());
-            for (NfcFServiceInfo service : userServices.services.values()) {
-                long token = proto.start(RegisteredNfcFServicesCacheProto.NFC_FSERVICE_INFO);
-                service.dumpDebug(proto);
-                proto.end(token);
-            }
         }
     }
 
