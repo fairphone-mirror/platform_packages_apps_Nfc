@@ -13,12 +13,14 @@
 // limitations under the License.
 
 android_test {
-    name: "NfcTests",
+    name: "AospNfcTests",
     libs: [
         "android.test.runner",
         "android.test.base",
     ],
-    static_libs: ["junit"],
+    static_libs: [
+        "junit",
+    ],
     // Include all test java files.
     srcs: ["src/**/*.java"],
     platform_apis: true,

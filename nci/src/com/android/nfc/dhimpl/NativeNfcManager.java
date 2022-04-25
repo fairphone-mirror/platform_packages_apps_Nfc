@@ -13,7 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2018-2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 package com.android.nfc.dhimpl;
 
 import android.content.Context;
@@ -40,7 +60,10 @@ public class NativeNfcManager implements DeviceHost {
 
     static final int DEFAULT_LLCP_MIU = 1980;
     static final int DEFAULT_LLCP_RWSIZE = 2;
-
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    static final int MODE_DEDICATED = 1;
+    static final int MODE_NORMAL = 0;
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
     static final String DRIVER_NAME = "android-nci";
 
     static {
@@ -52,6 +75,10 @@ public class NativeNfcManager implements DeviceHost {
 
     private int mIsoDepMaxTransceiveLength;
     private final DeviceHostListener mListener;
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    private final NativeNfcMposManager mMposMgr;
+    private final NativeT4tNfceeManager mT4tNfceeMgr;
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
     private final Context mContext;
 
     private final Object mLock = new Object();
@@ -61,6 +88,10 @@ public class NativeNfcManager implements DeviceHost {
         mListener = listener;
         initializeNativeStructure();
         mContext = context;
+        /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+        mMposMgr = new NativeNfcMposManager();
+        mT4tNfceeMgr = new NativeT4tNfceeManager();
+        /* MODIFIED-END by zhangjie,BUG-10277814*/
     }
 
     public native boolean initializeNativeStructure();
@@ -73,6 +104,22 @@ public class NativeNfcManager implements DeviceHost {
     public boolean checkFirmware() {
         return doDownload();
     }
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public native boolean doPartialInitForEseCosUpdate();
+    public native boolean doPartialDeinitForEseCosUpdate();
+
+    @Override
+    public boolean accessControlForCOSU (int mode) {
+        boolean stat = false;
+        if(mode == MODE_DEDICATED) {
+             stat = doPartialInitForEseCosUpdate();
+        }
+        else if(mode == MODE_NORMAL) {
+             stat = doPartialDeinitForEseCosUpdate();
+        }
+        return stat;
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     private native boolean doInitialize();
 
@@ -129,18 +176,85 @@ public class NativeNfcManager implements DeviceHost {
     @Override
     public native boolean sendRawFrame(byte[] data);
 
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public native boolean doClearRoutingEntry(int type );
+
     @Override
-    public native boolean routeAid(byte[] aid, int route, int aidInfo);
+    public boolean clearRoutingEntry( int type ) {
+        return(doClearRoutingEntry( type ));
+    }
+
+    public native boolean doSetRoutingEntry(int type, int value, int route, int power);
+    @Override
+    public boolean setRoutingEntry(int type, int value, int route, int power) {
+        return(doSetRoutingEntry(type, value, route, power));
+    }
+
+    @Override
+    public native boolean routeAid(byte[] aid, int route, int aidInfo, int powerState);
+
 
     @Override
     public native boolean unrouteAid(byte[] aid);
 
     @Override
+    public native int getAidTableSize();
+
+    @Override
+    public native int   getDefaultAidRoute();
+
+    @Override
+    public native int   getDefaultDesfireRoute();
+
+    @Override
+    public native int   getT4TNfceePowerState();
+
+    @Override
+    public native int   getDefaultMifareCLTRoute();
+
+    @Override
+    public native int   getDefaultFelicaCLTRoute();
+
+    @Override
+    public native int   getDefaultAidPowerState();
+
+    @Override
+    public native int   getDefaultDesfirePowerState();
+
+    @Override
+    public native int   getDefaultMifareCLTPowerState();
+
+    @Override
+    public native int   getDefaultFelicaCLTPowerState();
+
+    @Override
+    public native int getGsmaPwrState();
+
+    @Override
     public native boolean commitRouting();
+
+    @Override
+    public native void doChangeDiscoveryTech(int pollTech, int listenTech);
+
+    @Override
+    public native void setEmptyAidRoute(int deafultAidroute);
+
+    @Override
+    public native int[] doGetActiveSecureElementList();
+
+    @Override
+    public native int doSetFieldDetectMode(boolean mode);
+
+    @Override
+    public native boolean isFieldDetectEnabled();
 
     public native int doRegisterT3tIdentifier(byte[] t3tIdentifier);
 
     @Override
+    public native int doNfcSelfTest(int type);
+
+    @Override
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
     public void registerT3tIdentifier(byte[] t3tIdentifier) {
         synchronized (mLock) {
             int handle = doRegisterT3tIdentifier(t3tIdentifier);
@@ -182,6 +296,11 @@ public class NativeNfcManager implements DeviceHost {
     public native void doSetScreenState(int screen_state_mask);
 
     @Override
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    public native void doResonantFrequency(boolean isResonantFreq);
+
+    @Override
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
     public native int getNciVersion();
 
     private native void doEnableDiscovery(int techMask,
@@ -196,9 +315,61 @@ public class NativeNfcManager implements DeviceHost {
                 params.shouldEnableReaderMode(), params.shouldEnableHostRouting(),
                 params.shouldEnableP2p(), restart);
     }
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    @Override
+    public void stopPoll(int mode) {
+        mMposMgr.doStopPoll(mode);
+    }
 
     @Override
+    public void startPoll() {
+        mMposMgr.doStartPoll();
+    }
+    @Override
     public native void disableDiscovery();
+
+    @Override
+    public int mposSetReaderMode(boolean on) {
+        return mMposMgr.doMposSetReaderMode(on);
+    }
+
+    @Override
+    public int configureSecureReaderMode(boolean on, String readerType) {
+        return mMposMgr.doConfigureSecureReaderMode(on, readerType);
+    }
+
+    @Override
+    public boolean mposGetReaderMode() {
+        return mMposMgr.doMposGetReaderMode();
+    }
+
+    @Override
+    public native int doEnableDebugNtf (byte fieldValue);
+
+    @Override
+    public int doWriteT4tData(byte[] fileId, byte[] data, int length) {
+      return mT4tNfceeMgr.doWriteT4tData(fileId, data, length);
+    }
+
+    @Override
+    public byte[] doReadT4tData(byte[] fileId) {
+      return mT4tNfceeMgr.doReadT4tData(fileId);
+    }
+    @Override
+    public boolean doLockT4tData(boolean lock) {
+      return mT4tNfceeMgr.doLockT4tData(lock);
+    }
+
+    @Override
+    public boolean isLockedT4tData() {
+      return mT4tNfceeMgr.isLockedT4tData();
+    }
+
+    @Override
+    public boolean doClearNdefT4tData() {
+      return mT4tNfceeMgr.doClearNdefT4tData();
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     private native NativeLlcpConnectionlessSocket doCreateLlcpConnectionlessSocket(int nSap,
             String sn);
@@ -331,8 +502,6 @@ public class NativeNfcManager implements DeviceHost {
 
     }
 
-    public native int getAidTableSize();
-
     private native void doSetP2pInitiatorModes(int modes);
     @Override
     public void setP2pInitiatorModes(int modes) {
@@ -398,7 +567,19 @@ public class NativeNfcManager implements DeviceHost {
     private void notifyNdefMessageListeners(NativeNfcTag tag) {
         mListener.onRemoteEndpointDiscovered(tag);
     }
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    private void notifySeListenActivated() {
+        mListener.onSeListenActivated();
+    }
 
+    private void notifySeListenDeactivated() {
+        mListener.onSeListenDeactivated();
+    }
+
+    private void notifySeInitialized() {
+        mListener.onSeInitialized();
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
     /**
      * Notifies P2P Device detected, to activate LLCP link
      */
@@ -420,6 +601,13 @@ public class NativeNfcManager implements DeviceHost {
         mListener.onLlcpFirstPacketReceived(device);
     }
 
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    /* Reader over SWP/SCR listeners*/
+    private void notifyonMposManagerEvents(int event) {
+        mListener.onScrNotifyEvents(event);
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
+
     private void notifyHostEmuActivated(int technology) {
         mListener.onHostCardEmulationActivated(technology);
     }
@@ -427,6 +615,12 @@ public class NativeNfcManager implements DeviceHost {
     private void notifyHostEmuData(int technology, byte[] data) {
         mListener.onHostCardEmulationData(technology, data);
     }
+
+    /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+    private void notifyNfcDebugInfo(int len, byte[] data) {
+        mListener.onLxDebugConfigData(len, data);
+    }
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     private void notifyHostEmuDeactivated(int technology) {
         mListener.onHostCardEmulationDeactivated(technology);
@@ -443,8 +637,25 @@ public class NativeNfcManager implements DeviceHost {
     private void notifyTransactionListeners(byte[] aid, byte[] data, String evtSrc) {
         mListener.onNfcTransactionEvent(aid, data, evtSrc);
     }
-
-    private void notifyEeUpdated() {
-        mListener.onEeUpdated();
-    }
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/* NXP extension are here */
+    @Override
+    public native int getFWVersion();
+    @Override
+    public native byte[] readerPassThruMode(byte status, byte modulationTyp);
+    @Override
+    public native byte[] transceiveAppData(byte[] data);
+    @Override
+    public native boolean isNfccBusy();
+    @Override
+    public native int setTransitConfig(String configs);
+    @Override
+    public native int getRemainingAidTableSize();
+    @Override
+    public native int doselectUicc(int uiccSlot);
+    @Override
+    public native int doGetSelectedUicc();
+    @Override
+    public native int setPreferredSimSlot(int uiccSlot);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 }

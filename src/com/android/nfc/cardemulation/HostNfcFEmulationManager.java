@@ -13,6 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2018- 2019 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 package com.android.nfc.cardemulation;
 
@@ -30,16 +51,18 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.util.Log;
-import android.util.proto.ProtoOutputStream;
 
 import com.android.nfc.NfcService;
 import com.android.nfc.NfcStatsLog;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import android.os.SystemProperties;
 
 public class HostNfcFEmulationManager {
     static final String TAG = "HostNfcFEmulationManager";
-    static final boolean DBG = false;
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     static final int STATE_IDLE = 0;
     static final int STATE_W4_SERVICE = 1;
@@ -195,6 +218,11 @@ public class HostNfcFEmulationManager {
             mActiveService = service;
             mActiveServiceName = mServiceName;
         }
+        /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+        if (mActiveService == null) {
+            return;
+        }
+        /* MODIFIED-END by zhangjie,BUG-10277814*/
         Message msg = Message.obtain(null, HostNfcFService.MSG_COMMAND_PACKET);
         Bundle dataBundle = new Bundle();
         dataBundle.putByteArray("data", data);
@@ -307,14 +335,19 @@ public class HostNfcFEmulationManager {
                     return;
                 }
                 byte[] data = dataBundle.getByteArray("data");
-                if (data == null) {
+                /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+                /* this piece of code is commented to allow the application to send an empty
+                   data packet */
+                /*if (data == null) {
+                    Log.e(TAG, "Data is null");
                     return;
                 }
                 if (data.length == 0) {
                     Log.e(TAG, "Invalid response packet");
                     return;
-                }
-                if (data.length != (data[0] & 0xff)) {
+                }*/
+                if (data != null && (data.length != (data[0] & 0xff))) {
+                /* MODIFIED-END by zhangjie,BUG-10277814*/
                     Log.e(TAG, "Invalid response packet");
                     return;
                 }
@@ -369,21 +402,6 @@ public class HostNfcFEmulationManager {
         pw.println("Bound HCE-F services: ");
         if (mServiceBound) {
             pw.println("    service: " + mServiceName);
-        }
-    }
-
-    /**
-     * Dump debugging information as a HostNfcFEmulationManagerProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    void dumpDebug(ProtoOutputStream proto) {
-        if (mServiceBound) {
-            mServiceName.dumpDebug(proto, HostNfcFEmulationManagerProto.SERVICE_NAME);
         }
     }
 }

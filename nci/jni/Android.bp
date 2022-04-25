@@ -1,5 +1,5 @@
 cc_library_shared {
-    name: "libnfc_nci_jni",
+    name: "aosp_libnfc_nci_jni",
 
     cflags: [
         "-Wall",
@@ -8,6 +8,15 @@ cc_library_shared {
         "-Werror",
 
         "-DNXP_UICC_ENABLE",
+
+        //NXP PN547 Enable
+        "-DNXP_EXTNS=TRUE",
+        "-DNFC_NXP_NON_STD_CARD=FALSE",
+        "-DNFC_NXP_HFO_SETTINGS=FALSE",
+
+      //#Enable HCE-F specific
+        "-DNXP_NFCC_HCE_F=TRUE",
+        "-DNXP_LDR_SVC_VER_2=TRUE",
     ],
 
     srcs: ["**/*.cpp"],
@@ -19,12 +28,14 @@ cc_library_shared {
         "system/nfc/src/gki/ulinux",
         "system/nfc/src/gki/common",
         "system/nfc/utils/include",
+
     ],
 
     local_include_dirs: [
         "extns/pn54x/inc",
         "extns/pn54x/src/common",
         "extns/pn54x/src/mifare",
+        "extns/pn54x/src/utils",
     ],
 
     shared_libs: [
@@ -36,17 +47,16 @@ cc_library_shared {
         "libnfc-nci",
         "libchrome",
         "libbase",
+        "android.hardware.nfc@1.0",
+        "android.hardware.nfc@1.1",
+        "android.hardware.nfc@1.2",
+        "vendor.nxp.nxpnfc@2.0",
+        "vendor.nxp.nxpnfclegacy@1.0",
     ],
-
-    static_libs: ["libxml2"],
 
     product_variables: {
         debuggable: {
             cflags: ["-DDCHECK_ALWAYS_ON"],
         },
-    },
-    sanitize: {
-        integer_overflow: true,
-        misc_undefined: ["bounds"],
     },
 }

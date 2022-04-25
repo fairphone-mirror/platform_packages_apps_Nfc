@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <android-base/stringprintf.h>
 #include <base/logging.h>
 #include <nativehelper/JNIHelp.h>
 
-#include "JavaClassConstants.h"
-#include "NfcAdaptation.h"
 #include "NfcJniUtil.h"
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+//#include "NfcAdaptation.h"
+#include "JavaClassConstants.h"
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 #include "PeerToPeer.h"
+
 #include "nfa_api.h"
 #include "nfa_p2p_api.h"
 

@@ -178,8 +178,12 @@ typedef struct phNciNfc_Iso14443AInfo {
   uint8_t UidLength; /* UID information length, shall not be greater
                      than PHNCINFC_MAX_UID_LENGTH i.e., 10 */
   uint8_t AppData[PH_NCINFCTYPES_MAX_ATR_LENGTH]; /* Application data
-                                              information of the tag discovered
-                                              (= Historical bytes for type A) */
+                                              // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+                                              information of the
+                                              tag discovered (= Historical bytes
+                                              for
+                                              type A) */
+                                              /* MODIFIED-END by zhangjie,BUG-10277814*/
   uint8_t AppDataLength;                          /* Application data length */
   uint8_t Sak; /* SAK information of the TYPE ATag Discovered
                Mapped to SEL_RES Response*/
@@ -197,8 +201,11 @@ typedef struct phNciNfc_Iso14443AInfo {
 
 /*
  * The Remote Device Information Union includes the available Remote Device
- * Information structures. Following the device detected, the corresponding data
- * structure is used.
+ // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+ * Information
+ * structures. Following the device detected, the corresponding data structure
+ * is used.
+ // MODIFIED-END by zhangjie, BUG-10277814
  */
 typedef union phNciNfc_RemoteDevInfo {
   phNciNfc_Iso14443AInfo_t Iso14443A_Info; /* Type A tag Info */

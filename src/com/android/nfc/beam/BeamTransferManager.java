@@ -14,6 +14,28 @@
  * limitations under the License.
  */
 
+ /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+ /******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
+
 package com.android.nfc.beam;
 
 import com.android.nfc.R;
@@ -45,7 +67,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 
-import androidx.core.content.FileProvider;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/* below comment shall be reverted once androidx support available from sdk
+ and import android.support.v4.content.FileProvider; shall be removed*/
+//import androidx.core.content.FileProvider;
+import android.support.v4.content.FileProvider;
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 
 /**
  * A BeamTransferManager object represents a set of files

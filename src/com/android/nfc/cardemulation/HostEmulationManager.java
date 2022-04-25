@@ -13,7 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+/******************************************************************************
+*
+*  The original Work has been changed by NXP.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*
+*  Copyright 2018-2020 NXP
+*
+******************************************************************************/
+/* MODIFIED-END by zhangjie,BUG-10277814*/
 package com.android.nfc.cardemulation;
 
 import android.app.ActivityManager;
@@ -22,7 +42,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.nfc.cardemulation.ApduServiceInfo;
+import android.nfc.cardemulation.NfcApduServiceInfo; // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 import android.nfc.cardemulation.CardEmulation;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
@@ -34,18 +54,19 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.util.Log;
-import android.util.proto.ProtoOutputStream;
-
 import com.android.nfc.NfcService;
 import com.android.nfc.NfcStatsLog;
 import com.android.nfc.cardemulation.RegisteredAidCache.AidResolveInfo;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+/* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+import android.os.SystemProperties;
 
 public class HostEmulationManager {
     static final String TAG = "HostEmulationManager";
-    static final boolean DBG = false;
+    static final boolean DBG = ((SystemProperties.get("persist.nfc.ce_debug").equals("1")) ? true : false);
+    /* MODIFIED-END by zhangjie,BUG-10277814*/
 
     static final int STATE_IDLE = 0;
     static final int STATE_W4_SELECT = 1;
@@ -173,7 +194,7 @@ public class HostEmulationManager {
                 if (resolveInfo.defaultService != null) {
                     // Resolve to default
                     // Check if resolvedService requires unlock
-                    ApduServiceInfo defaultServiceInfo = resolveInfo.defaultService;
+                    NfcApduServiceInfo defaultServiceInfo = resolveInfo.defaultService; // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                     if (defaultServiceInfo.requiresUnlock() &&
                             mKeyguard.isKeyguardLocked() && mKeyguard.isKeyguardSecure()) {
                         // Just ignore all future APDUs until next tap
@@ -191,7 +212,7 @@ public class HostEmulationManager {
                     }
                     resolvedService = defaultServiceInfo.getComponent();
                 } else if (mActiveServiceName != null) {
-                    for (ApduServiceInfo serviceInfo : resolveInfo.services) {
+                    for (NfcApduServiceInfo serviceInfo : resolveInfo.services) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                         if (mActiveServiceName.equals(serviceInfo.getComponent())) {
                             resolvedService = mActiveServiceName;
                             break;
@@ -203,7 +224,7 @@ public class HostEmulationManager {
                     // Ask the user to confirm.
                     // Just ignore all future APDUs until we resolve to only one
                     mState = STATE_W4_DEACTIVATE;
-                    launchResolver((ArrayList<ApduServiceInfo>)resolveInfo.services, null,
+                    launchResolver((ArrayList<NfcApduServiceInfo>)resolveInfo.services, null, // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                             resolveInfo.category);
                     return;
                 }
@@ -387,7 +408,7 @@ public class HostEmulationManager {
         }
     }
 
-    void launchTapAgain(ApduServiceInfo service, String category) {
+    void launchTapAgain(NfcApduServiceInfo service, String category) { // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
         Intent dialogIntent = new Intent(mContext, TapAgainDialog.class);
         dialogIntent.putExtra(TapAgainDialog.EXTRA_CATEGORY, category);
         dialogIntent.putExtra(TapAgainDialog.EXTRA_APDU_SERVICE, service);
@@ -395,7 +416,7 @@ public class HostEmulationManager {
         mContext.startActivityAsUser(dialogIntent, UserHandle.CURRENT);
     }
 
-    void launchResolver(ArrayList<ApduServiceInfo> services, ComponentName failedComponent,
+    void launchResolver(ArrayList<NfcApduServiceInfo> services, ComponentName failedComponent, // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
             String category) {
         Intent intent = new Intent(mContext, AppChooserActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -521,7 +542,7 @@ public class HostEmulationManager {
                     AidResolveInfo resolveInfo = mAidCache.resolveAid(mLastSelectedAid);
                     boolean isPayment = false;
                     if (resolveInfo.services.size() > 0) {
-                        launchResolver((ArrayList<ApduServiceInfo>)resolveInfo.services,
+                        launchResolver((ArrayList<NfcApduServiceInfo>)resolveInfo.services, // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
                                 mActiveServiceName, resolveInfo.category);
                     }
                 }
@@ -548,24 +569,6 @@ public class HostEmulationManager {
         }
         if (mServiceBound) {
             pw.println("    other: " + mServiceName);
-        }
-    }
-
-    /**
-     * Dump debugging information as a HostEmulationManagerProto
-     *
-     * Note:
-     * See proto definition in frameworks/base/core/proto/android/nfc/card_emulation.proto
-     * When writing a nested message, must call {@link ProtoOutputStream#start(long)} before and
-     * {@link ProtoOutputStream#end(long)} after.
-     * Never reuse a proto field number. When removing a field, mark it as reserved.
-     */
-    void dumpDebug(ProtoOutputStream proto) {
-        if (mPaymentServiceBound) {
-            mPaymentServiceName.dumpDebug(proto, HostEmulationManagerProto.PAYMENT_SERVICE_NAME);
-        }
-        if (mServiceBound) {
-            mServiceName.dumpDebug(proto, HostEmulationManagerProto.SERVICE_NAME);
         }
     }
 }

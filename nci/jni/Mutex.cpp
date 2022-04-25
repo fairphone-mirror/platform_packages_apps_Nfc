@@ -21,11 +21,9 @@
 #include "Mutex.h"
 #include "NfcJniUtil.h"
 
-#include <errno.h>
-#include <string.h>
-
 #include <android-base/stringprintf.h>
 #include <base/logging.h>
+#include <errno.h> // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 
 using android::base::StringPrintf;
 

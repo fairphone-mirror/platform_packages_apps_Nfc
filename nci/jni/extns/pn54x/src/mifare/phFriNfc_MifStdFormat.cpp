@@ -302,14 +302,17 @@ static void phFriNfc_MfStd_H_FillSendBuf(
                                                       Access bits and GPB
                                                       of MAD sector */
       MADSectTr4k[] =
-          PH_FRINFC_SMTCRDFMT_MSTD_MADSECT_KEYA_ACS_BIT_4K, /* MAD key A,
-                                                              Access bits
-                                                              and GPB of
-                                                              MAD sector */
-      NFCSectTr[] =
-          PH_FRINFC_SMTCRDFMT_NFCFORUMSECT_KEYA_ACS_BIT, /* NFC forum key A,
-                                                         Access bits and GPB of
-                                                         NFC sector */
+          /* MODIFIED-BEGIN by zhangjie, 2020-12-14,BUG-10277814*/
+          PH_FRINFC_SMTCRDFMT_MSTD_MADSECT_KEYA_ACS_BIT_4K,        /* MAD key A,
+                                                                     Access bits
+                                                                     and GPB of
+                                                                     MAD sector */
+      NFCSectTr[] = PH_FRINFC_SMTCRDFMT_NFCFORUMSECT_KEYA_ACS_BIT, /* NFC forum
+                                                                   key A,
+                                                                   Access bits
+                                                                   and GPB of
+                                                                   NFC sector */
+                                                                   /* MODIFIED-END by zhangjie,BUG-10277814*/
       NDEFMsgTLV[16] =
           {0x03, 0x00, 0xFE, 0x00, 0x00, 0x00, /* NDEF message TLV
                                                   (INITIALISED state) */
@@ -1158,7 +1161,10 @@ static void phFriNfc_MfStd_H_StrNdefData(
   /* Zeroth sector of the Mifare card is MAD sector, CRC is 0x14 */
   NdefSmtCrdFmt->AddInfo.MfStdInfo.MADSectBlk[PH_FRINFC_MFSTD_FMT_VAL_0] = 0x14;
   /* Info byte is 0x01, because the NDEF application is written and as per the
-   * MAD spec, the value for miscellaneous application is 0x01
+   // MODIFIED-BEGIN by zhangjie, 2020-12-14, BUG-10277814
+   * MAD spec,
+   * the value for miscellaneous application is 0x01
+   // MODIFIED-END by zhangjie, BUG-10277814
    */
   NdefSmtCrdFmt->AddInfo.MfStdInfo.MADSectBlk[PH_FRINFC_MFSTD_FMT_VAL_1] = 0x01;
 

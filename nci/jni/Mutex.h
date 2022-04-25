@@ -20,6 +20,7 @@
 
 #pragma once
 #include <pthread.h>
+#include <cstring> // MODIFIED by zhangjie, 2020-12-14,BUG-10277814
 
 class Mutex {
  public:

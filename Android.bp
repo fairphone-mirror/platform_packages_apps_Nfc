@@ -7,8 +7,9 @@ genrule {
 }
 
 // NCI Configuration
+//ALLOW_MISSING_DEPENDENCIES = ["true"]
 android_app {
-    name: "NfcNci",
+    name: "AospNfcNci",
     srcs: [
         "src/**/*.java",
         "nci/**/*.java",
@@ -17,7 +18,12 @@ android_app {
     platform_apis: true,
     certificate: "platform",
     jni_libs: ["libnfc_nci_jni"],
-    static_libs: ["androidx.appcompat_appcompat"],
+    libs: ["com.nxp.nfc"],
+    static_libs: [
+        "android-support-v4",
+        "android-support-core-utils",
+        "android.hardware.secure_element-V1.0-java",
+        ],
     optimize: {
         enabled: false,
     },
