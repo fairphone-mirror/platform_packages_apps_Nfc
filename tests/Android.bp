@@ -13,7 +13,7 @@
 // limitations under the License.
 
 android_test {
-    name: "NfcTests",
+    name: "AospNfcTests",
     libs: [
         "android.test.runner",
         "android.test.base",
