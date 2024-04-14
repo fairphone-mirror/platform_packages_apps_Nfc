@@ -916,6 +916,10 @@ public class NfcService implements DeviceHostListener {
         }
     }
 
+    public boolean isSecureNfcEnabled() {
+        return mIsSecureNfcEnabled;
+    }
+
     final class NfcAdapterService extends INfcAdapter.Stub {
         /**
          * An interface for vendor specific extensions
