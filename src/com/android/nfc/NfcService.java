@@ -89,6 +89,7 @@ import android.os.PowerManager.OnThermalStatusChangedListener;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.VibrationAttributes;
@@ -697,6 +698,46 @@ public class NfcService implements DeviceHostListener, ForegroundUtils.Callback 
         mContext.registerReceiverForAllUsers(mReceiver, filter, null, null);
     }
 
+    // Modified by yingsen.zhang 20250526 for FPS-2738 begin
+    private void registerSimStatusChangedReceiver() {
+        final Boolean[] sim_absent_before = new Boolean[1];
+        final Boolean[] sim_loaded_before = new Boolean[1];
+        sim_absent_before[0] = false;
+        sim_loaded_before[0] = false;
+
+        mContext.registerReceiverForAllUsers(
+            new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String action = intent.getAction();
+                    if (!Intent.ACTION_SIM_STATE_CHANGED.equals(action)) {
+                        return;
+                    }
+
+                    String sim_status = intent.getStringExtra(Intent.EXTRA_SIM_STATE);
+                    Log.d(TAG, "Received SIM status changed to: " + sim_status);
+
+                    if (Intent.SIM_STATE_ABSENT.equals(sim_status)) {
+                        sim_absent_before[0] = true;
+                    }
+
+                    if (Intent.SIM_STATE_LOADED.equals(sim_status)) {
+                        if (sim_loaded_before[0] && !sim_absent_before[0]) {
+                            Log.d(TAG, "SIM card loaded before, but do not absent before, ignore");
+                            return;
+                        }
+
+                        sim_loaded_before[0] = true;
+
+                        Log.d(TAG, "SIM card loaded, restart NFC");
+                        restartStack();
+                    }
+                }
+            },
+            new IntentFilter(Intent.ACTION_SIM_STATE_CHANGED), null, null);
+    }
+    // Modified by yingsen.zhang 20250526 for FPS-2738 end
+
     public NfcService(Application nfcApplication, NfcInjector nfcInjector) {
         mUserId = ActivityManager.getCurrentUser();
         mContext = nfcApplication;
@@ -709,6 +750,11 @@ public class NfcService implements DeviceHostListener, ForegroundUtils.Callback 
         mNfcAdapter = new NfcAdapterService();
         mRoutingTableParser = mNfcInjector.getRoutingTableParser();
         Log.i(TAG, "Starting NFC service");
+
+        if (Build.IS_USERDEBUG) {
+            SystemProperties.set("persist.nfc.debug_enabled", "true");
+            SystemProperties.set("persist.nfc.vendor_debug_enabled", "true");
+        }
 
         sService = this;
 
@@ -793,6 +839,9 @@ public class NfcService implements DeviceHostListener, ForegroundUtils.Callback 
         ownerFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
         ownerFilter.addDataScheme("package");
         mContext.registerReceiverForAllUsers(mOwnerReceiver, ownerFilter, null, null);
+
+        // Modified by yingsen.zhang 20250526 for FPS-2738
+        registerSimStatusChangedReceiver();
 
         addKeyguardLockedStateListener();
 
